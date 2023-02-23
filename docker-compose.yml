@@ -1,14 +1,14 @@
 version: "3"
+name: nas
 services:
-  master:
+  drone-master:
     restart: always
-    container_name: drone-ci_master
     image: drone/drone:latest
     networks:
       - apps
       - drone-runners
     volumes:
-      - data:/data
+      - drone:/data
     environment:
       - "DRONE_DATABASE_DRIVER=sqlite3"
       - "DRONE_DATABASE_DATASOURCE=/data/database.sqlite"
@@ -20,10 +20,8 @@ services:
       - "DRONE_RPC_SECRET=correct-horse-batter-staple"
       - "DRONE_GOGS_SERVER=https://git.dome.lesha.co"
       - "DRONE_USER_CREATE=username:lesha,admin:true"
-
-  runner-docker:
+  drone-runner:
     restart: always
-    container_name: drone-ci_runner-docker
     image: drone/drone-runner-docker:latest
     networks:
       - drone-runners
@@ -35,10 +33,24 @@ services:
       - "DRONE_RPC_SECRET=correct-horse-batter-staple"
       - "DRONE_RUNNER_CAPACITY=2"
       - "DRONE_RUNNER_NAME=drone-runner-docker"
+  vaultwarden:
+    restart: always
+    image: vaultwarden/server:latest
+    networks:
+      - apps
+    volumes:
+      - vaultwarden:/data
+    environment:
+      - "WEBSOCKET_ENABLED=true"
+      - "DOMAIN=https://vw.dome.lesha.co"
+  # gitea:
+
 
 volumes:
-  data:
+  drone:
+  vaultwarden:
 networks:
   drone-runners:
   apps:
+    # this will not be external once i pull nginx in this configuration
     external: true
