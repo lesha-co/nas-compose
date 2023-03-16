@@ -1,28 +1,48 @@
+# don't forget initially to set keycloak schema owner to keycloak user
 name: "nas"
-
 services:
   keycloak:
     image: quay.io/keycloak/keycloak
     ports: 
       - 8080:8080
+    networks:
+      - db
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: 123
-      KC_DB: postgres 
-      KC_DB_URL: jdbc:postgresql://postgres/keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: keycloak
+
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_SCHEMA: public
+
+      KC_HOSTNAME_STRICT: false
     command:
       - start-dev
+    depends_on: 
+      - postgres
   postgres:
     image: postgres
     restart: always
     ports:
-      - 2345:2345
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - db 
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: postgres
-      PGPORT: 2345
+
+volumes:
+  pgdata:
+
+networks:
+  apps: 
+  db:
   # drone-master:
   #   image: drone/drone:latest
   #   networks:
@@ -53,7 +73,6 @@ services:
   #     - "DRONE_RPC_SECRET=correct-horse-batter-staple"
   #     - "DRONE_RUNNER_CAPACITY=2"
   #     - "DRONE_RUNNER_NAME=drone-runner-docker"
-    # gitea:
     # jellyfin:
     # transmission:
     # vaultwarden
@@ -87,6 +106,3 @@ services:
     # secrets:
     #   server-certificate:
     #     external: true
-
-networks:
-  apps: 
